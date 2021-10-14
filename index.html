@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta property="og:site_name" content="travelresearch.com">
+    <meta property="og:title" content="TravelResearch" />
+    <meta property="og:description" content="¡Find the information abpit your next country you want to visit!" />
+    <meta property="og:image" itemprop="image" content="/public/img/logo-og.jpg">
+    <meta property="og:type" content="website" />
+    <link href="/src/css/material-design-icons.min.css" rel="stylesheet">
+    <link href="/src/css/vuetify.min.css" rel="stylesheet">
+    <link href="/src/css//index.css" rel="stylesheet">
+    <title>TravelResearch</title>
+</head>
+
+<body>
+
+    <div id="preloader" class="gradient">
+        <img src="/src/animations/double-ring.svg" alt="">
+    </div>
+    
+    <div id="fr-container">
+        <!-- Sizes your content based upon application components -->
+        <v-app id="app" style="display: none" light>
+            <!-- Provides the application the proper gutter -->
+            <v-main class="gradient d-flex align-center">
+                <v-container fluid>
+                    <v-row justify="center">
+                        <v-col class="d-flex justify-center mb-4" cols="12">
+                            <v-img src="/src/img/logo.svg" max-width="150px"></v-img>
+                        </v-col>
+                        <v-col class="mf" cols="10" md="8" lg="6" xl="4">
+                            <v-card color="transparent" flat>
+                                <v-card-title class="white--text text-center">Search your destiny</v-card-title>
+                                <v-card-text>
+                                    <v-form>
+                                        <v-combobox v-model="country_selected" :items="countries" item-text="name"
+                                            append-icon="mdi-magnify" @change="getCountryInfo" return-json clearable
+                                            hide-selected dark rounded filled></v-combobox>
+                                    </v-form>
+                                </v-card-text>
+                            </v-card>
+                        </v-col>
+                        <v-col cols="12"></v-col>
+                        <v-col class="mf" cols="10" md="8" lg="6" xl="4"
+                            v-if="Object.keys(country_data).length > 0 && !country_data_loading">
+                            <v-card color="transparent" flat>
+                                <v-row class="d-flex justify-center">
+                                    <v-col cols="12" md="8" order="2" order-md="1">
+                                        <v-card-title class="white--text justify-center justify-md-start mb-1">
+                                            {{ country_data.names.name }}, {{ country_data.names.full }}
+                                        </v-card-title>
+                                        <template v-if="country_data.neighbors.length > 0">
+                                            <v-card-subtitle class="white--text text-center text-md-left">Other
+                                                countries in the neighborhood of {{ country_data.names.name }} are
+                                                <template v-for="( country, i ) in country_data.neighbors">
+                                                    <template v-if="i == country_data.neighbors.length - 1">
+                                                        and {{ country.name }}
+                                                    </template>
+                                                    <template v-else>
+                                                        {{ country.name }},
+                                                    </template>
+                                                </template>
+                                            </v-card-subtitle>
+                                        </template>
+                                    </v-col>
+                                    <v-col class="d-flex justify-center" cols="12" md="4" order="1" order-md="2"
+                                        v-if="country_data.names.iso2 !== null">
+                                        <img :src="'https://travelbriefing.org/sites/views/default/images/flags/4x3/'+ country_data.names.iso2.toLowerCase() +'.svg'"
+                                            width="150px" alt="">
+                                    </v-col>
+                                </v-row>
+
+                                <v-card-text class="mf py-0">
+                                    <v-col cols="12">
+                                        <h3 class="text-center text-md-left primary--text">Water quality</h3>
+                                    </v-col>
+                                </v-card-text>
+                                <v-card-text ref="water" class="px-0">
+                                    <v-list-item class="px-0">
+                                        <template v-if="country_data.water.short === null">
+                                            <v-list-item-icon class="mr-1">
+                                                <v-icon>
+                                                    mdi-alert-circle
+                                                </v-icon>
+                                            </v-list-item-icon>
+                                            <v-list-item-content>
+                                                <v-list-item-title>
+                                                    There is not enought information about quality of tap water in
+                                                    {{ country_data.names.name }}
+                                                </v-list-item-title>
+                                            </v-list-item-content>
+                                        </template>
+                                        <template v-else>
+                                            <v-list-item-icon class="mr-1">
+                                                <v-icon
+                                                    :class="country_data.water.short == 'safe' ? 'success--text' : 'warning--text'">
+                                                    mdi-{{ country_data.water.short == 'safe' ? 'check-circle' : 'alert' }}
+                                                </v-icon>
+                                            </v-list-item-icon>
+                                            <v-list-item-content>
+                                                <v-list-item-title>
+                                                    Drinking tap water in {{ country_data.names.name }} is
+                                                    <span
+                                                        :class="[country_data.water.short == 'safe' ? 'success--text' : 'warning--text', 'font-weight-bold']">
+                                                        {{ country_data.water.short }}
+                                                    </span>
+                                                </v-list-item-title>
+                                            </v-list-item-content>
+                                        </template>
+                                    </v-list-item>
+                                </v-card-text>
+
+                                <v-card-text class="mf py-0">
+                                    <v-col cols="12">
+                                        <h3 class="text-center text-md-left primary--text">Timezone</h3>
+                                    </v-col>
+                                </v-card-text>
+                                <v-card-text ref="timezone" class="px-0">
+                                    <v-list-item class="px-0">
+                                        <v-list-item-icon class="mr-1">
+                                            <v-icon>mdi-clock</v-icon>
+                                        </v-list-item-icon>
+                                        <v-list-item-content two-line>
+                                            <template v-if="country_data.timezone.name === null">
+                                                <v-list-item-title>
+                                                    There is not enought information about the timezone of
+                                                    {{ country_data.names.name }}
+                                                </v-list-item-title>
+                                            </template>
+                                            <template v-else>
+                                                <v-list-item-title>
+                                                    The timezone in {{ country_data.names.name }} is
+                                                    {{ country_data.timezone.name }}
+                                                </v-list-item-title>
+
+                                                <v-list-item-subtitle>
+                                                    That makes the current date and time
+                                                    {{ formatCurrentDate(country_data.timezone.name) }}
+                                                </v-list-item-subtitle>
+                                            </template>
+                                        </v-list-item-content>
+                                    </v-list-item>
+                                </v-card-text>
+
+                                <v-card-text class="mf py-0">
+                                    <v-col cols="12">
+                                        <h3 class="text-center text-md-left primary--text">Currency</h3>
+                                    </v-col>
+                                </v-card-text>
+                                <v-card-text ref="currency" class="px-0">
+                                    <v-form>
+                                        <v-row class="mb-n4">
+                                            <v-col cols="12">
+                                                <label class="white--text">{{ country_data.currency.name }}
+                                                    {{ country_data.currency.symbol !== null ? country_data.currency.symbol : '' }}
+                                                </label>
+                                                <v-text-field type="number" v-model="rate_from"
+                                                    @input="makeConversionCurrency('origin')" rounded dark filled>
+                                                </v-text-field>
+                                                <v-select v-model="currency_selected"
+                                                    :items="country_data.currency.compare" item-text="name"
+                                                    @change="makeConversionCurrency" dark return-object filled rounded>
+                                                </v-select>
+                                                <v-text-field type="number" v-model="rate_conversion" class="mt-n4"
+                                                    @input="makeConversionCurrency" dense rounded dark filled>
+                                                </v-text-field>
+                                            </v-col>
+                                        </v-row>
+                                    </v-form>
+                                </v-card-text>
+
+                                <v-card-text class="mf py-0">
+                                    <v-col cols="12">
+                                        <h3 class="text-center text-md-left primary--text">Language</h3>
+                                    </v-col>
+                                </v-card-text>
+                                <v-card-text ref="language" class="px-0">
+                                    <v-list-item class="px-0">
+                                        <v-list-item-icon class="mr-1">
+                                            <v-icon>
+                                                mdi-translate
+                                            </v-icon>
+                                        </v-list-item-icon>
+                                        <v-list-item-content two-line>
+                                            <template v-if="country_data.language.length == 0">
+                                                <v-list-item-title>
+                                                    There is not enought information about the language of
+                                                    {{ country_data.names.name }}
+                                                </v-list-item-title>
+                                            </template>
+                                            <template v-else>
+                                                <template v-if="country_data.language.length == 1">
+                                                    <v-list-item-title>
+                                                        The language spoken in {{ country_data.names.name }} is
+                                                        {{ country_data.language[0]['language'] }}
+                                                    </v-list-item-title>
+                                                </template>
+                                                <template v-else>
+                                                    <v-list-item-title>
+                                                        The language spoken in {{ country_data.names.name }} are:
+                                                    </v-list-item-title>
+                                                    <v-list-subtitle>
+                                                        <template v-for="item in country_data.language">
+                                                            {{ item.language }} <span
+                                                                v-if="item.official == 'No'">*</span>
+                                                            <br>
+                                                        </template>
+                                                    </v-list-subtitle>
+                                                    <span class="mt-4"><i>* Not an official language / spoken in some
+                                                            parts of the country</i></span>
+                                                </template>
+                                            </template>
+                                        </v-list-item-content>
+                                    </v-list-item>
+                                </v-card-text>
+
+                                <v-card-text class="mf py-0">
+                                    <v-col cols="12">
+                                        <h3 class="text-center text-md-left primary--text">Vaccinations and health</h3>
+                                        </h3>
+                                    </v-col>
+                                </v-card-text>
+                                <v-card-text ref="health" class="px-0">
+                                    <v-list-item class="px-0" v-if="country_data.vaccinations.length == 0">
+                                        <v-list-item-content two-line>
+                                            <v-list-item-title>
+                                                There is not enought information about the vaccinations of
+                                                {{ country_data.names.name }}
+                                            </v-list-item-title>
+                                        </v-list-item-content>
+                                    </v-list-item>
+                                    <v-list-item class="px-0" v-for="(vaccine, i) in country_data.vaccinations" :key="i"
+                                        v-else>
+                                        <v-list-item-content two-line>
+                                            <v-list-item-title>
+                                                {{ vaccine.name }}
+                                            </v-list-item-title>
+                                            <v-list-item-subtitle class="font-weight-bold">
+                                                {{ vaccine.message }}
+                                            </v-list-item-subtitle>
+                                        </v-list-item-content>
+                                    </v-list-item>
+                                </v-card-text>
+
+                                <v-card-text class="mf py-0">
+                                    <v-col cols="12">
+                                        <h3 class="text-center text-md-left primary--text">Telephone</h3>
+                                        </h3>
+                                    </v-col>
+                                </v-card-text>
+                                <v-card-text ref="telephone" class="px-0">
+                                    <v-list-item class="px-0">
+                                        <v-list-item-icon class="mr-1">
+                                            <v-icon>
+                                                mdi-phone
+                                            </v-icon>
+                                        </v-list-item-icon>
+                                        <v-list-item-content>
+                                            <v-list-item-title>
+                                                Country code: {{ country_data.telephone.calling_code }}
+                                            </v-list-item-title>
+                                        </v-list-item-content>
+                                    </v-list-item>
+
+                                    <v-list-item class="px-0">
+                                        <v-list-item-icon class="mr-1">
+                                            <v-icon>
+                                                mdi-ambulance
+                                            </v-icon>
+                                        </v-list-item-icon>
+                                        <v-list-item-content>
+                                            <v-list-item-title>
+                                                {{ country_data.telephone.ambulance }}
+                                            </v-list-item-title>
+                                        </v-list-item-content>
+                                    </v-list-item>
+
+                                    <v-list-item class="px-0">
+                                        <v-list-item-icon class="mr-1">
+                                            <v-icon>
+                                                mdi-fire
+                                            </v-icon>
+                                        </v-list-item-icon>
+                                        <v-list-item-content>
+                                            <v-list-item-title>
+                                                {{ country_data.telephone.fire }}
+                                            </v-list-item-title>
+                                        </v-list-item-content>
+                                    </v-list-item>
+
+                                    <v-list-item class="px-0">
+                                        <v-list-item-icon class="mr-1">
+                                            <v-icon>
+                                                mdi-police-badge
+                                            </v-icon>
+                                        </v-list-item-icon>
+                                        <v-list-item-content>
+                                            <v-list-item-title>
+                                                {{ country_data.telephone.police }}
+                                            </v-list-item-title>
+                                        </v-list-item-content>
+                                    </v-list-item>
+                                </v-card-text>
+
+                                <v-card-text class="mf py-0">
+                                    <v-col cols="12">
+                                        <h3 class="text-center text-md-left primary--text">Electricity</h3>
+                                    </v-col>
+                                </v-card-text>
+                                <v-card-text ref="electricity" class="px-0">
+                                    <v-list-item class="px-0">
+                                        <v-list-item-icon class="mr-1">
+                                            <v-icon>mdi-lightning-bolt</v-icon>
+                                        </v-list-item-icon>
+                                        <v-list-item-content two-line>
+                                            <template>
+                                                <v-list-item-title>
+                                                    {{ country_data.electricity.voltage != null ? country_data.electricity.voltage + ' Volt' : ''  }}{{ country_data.electricity.frequency != null 
+                                                        ? ', ' + country_data.electricity.frequency + ' Herz' : ''  
+                                                    }}
+                                                </v-list-item-title>
+                                            </template>
+                                        </v-list-item-content>
+                                    </v-list-item>
+                                    <v-row v-if="country_data.electricity.plugs.length > 0">
+                                        <v-col class="d-flex justify-center" cols="6" md="3"
+                                            v-for="(plug, i) in country_data.electricity.plugs" :key="i">
+                                            <v-card>
+                                                <v-img
+                                                    :src="'https://travelbriefing.org/sites/views/default/images/plugs/'+plug.toLowerCase()+'.svg'">
+                                                </v-img>
+                                                <v-card-title>Plug {{ plug }}</v-card-title>
+                                            </v-card>
+                                        </v-col>
+                                    </v-row>
+                                </v-card-text>
+                            </v-card>
+                        </v-col>
+                        <v-col cols="10" md="8" lg="6" xl="4" v-if="country_data_loading">
+                            <v-card color="transparent" flat>
+                                <v-skeleton-loader class="mx-auto" type="card"></v-skeleton-loader>
+                            </v-card>
+                        </v-col>
+                    </v-row>
+                </v-container fluid>
+            </v-main>
+        </v-app>
+    </div>
+
+    <script src="/src/js/preload.js"></script>
+    <script src="/src/js/lib/moment.min.js"></script>
+    <script src="/src/js/lib/moment-timezone-with-data.min.js"></script>
+    <script src="/src/js/vue/vue.min.js"></script>
+    <script src="/src/js/vue/plugins/vue-resource.min.js"></script>
+    <script src="/src/js/vue/components/vuetify.min.js"></script>
+    <script src="/src/js/index.js"></script>
+</body>
+
+</html>
