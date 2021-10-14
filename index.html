@@ -157,7 +157,9 @@
                                         <v-row class="mb-n4">
                                             <v-col cols="12">
                                                 <label class="white--text">{{ country_data.currency.name }}
-                                                    {{ country_data.currency.symbol !== null ? country_data.currency.symbol : '' }}
+                                                    <template v-if="country_data.currency.symbol !== null">
+                                                        <span v-html="country_data.currency.symbol"></span>
+                                                    </template>
                                                 </label>
                                                 <v-text-field type="number" v-model="rate_from"
                                                     @input="makeConversionCurrency('origin')" rounded dark filled>
