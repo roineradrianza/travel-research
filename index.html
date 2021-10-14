@@ -203,13 +203,13 @@
                                                     <v-list-item-title>
                                                         The language spoken in {{ country_data.names.name }} are:
                                                     </v-list-item-title>
-                                                    <v-list-subtitle>
+                                                    <v-list-item-subtitle>
                                                         <template v-for="item in country_data.language">
                                                             {{ item.language }} <span
                                                                 v-if="item.official == 'No'">*</span>
                                                             <br>
                                                         </template>
-                                                    </v-list-subtitle>
+                                                    </v-list-item-subtitle>
                                                     <span class="mt-4"><i>* Not an official language / spoken in some
                                                             parts of the country</i></span>
                                                 </template>
